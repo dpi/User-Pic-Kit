@@ -119,3 +119,19 @@ function userpickit_schema() {
 
   return $schema;
 }
+
+/**
+ * Implements hook_install().
+ */
+function userpickit_install() {
+  // Record all existing user pictures.
+  $users = db_select('users', 'u')
+    ->fields('u', array('uid', 'picture'))
+    ->condition('picture', '0', '>')
+    ->condition('uid', '0', '>')
+    ->execute();
+  
+  foreach ($users as $user) {
+    userpickit_user_picture_upload_set($user->uid, $user->picture);
+  }
+}

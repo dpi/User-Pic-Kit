@@ -138,7 +138,7 @@ function userpickit_user_picture_upload_set($uid, $fid) {
         ->fields($row)
         ->execute();
     
-      file_usage_add($picture_new, 'userpickit', 'user', $uid);
+      file_usage_add($picture_new, 'userpickit', 'user', $uid, 0);
     }
   }
 
