@@ -156,6 +156,7 @@ function userpickit_user_picture_type_info($picture_type, $account) {
     return module_invoke($info['module'], 'userpickit_picture', $picture_type, $account);
   }
 }
+
 /**
  * Get an uncached uri for a users picture type.
  */
@@ -335,6 +336,7 @@ function userpickit_types_all() {
   return $picture_types;
 }
 
+
 function userpickit_type_info($picture_type) {
   $picture_types = userpickit_types_all();
 
@@ -439,11 +441,22 @@ function userpickit_user_picture_type_set($account, $picture_type) {
 /**
  * Get the current picture type preference for a user.
  *
+ * Will always return a valid and active picture type.
+ *
  * @param object $account
  *   User object.
  */
 function userpickit_user_picture_type_get($account) {
-  return isset($account->data[USERPICKIT_USER_PICTURE_TYPE_CURRENT]) ? $account->data['userpickit_type'] : variable_get('userpickit_default', '');
+  $user_picture_type = isset($account->data[USERPICKIT_USER_PICTURE_TYPE_CURRENT]) ? $account->data['userpickit_type'] : NULL;
+  return userpickit_type_info($user_picture_type) ? $user_picture_type : userpickit_site_picture_type_get();
+}
+
+/**
+ * Get the default picture type for the site.
+ */
+function userpickit_site_picture_type_get() {
+  $site_picture_type = variable_get('userpickit_default', 'user');
+  return userpickit_type_info($site_picture_type) ? $site_picture_type : 'user';
 }
 
 /**
