@@ -1,0 +1,171 @@
+<?php
+
+/**
+ * @file
+ *
+ * Main file for Gravatar - User Pic Kit integration.
+ */
+
+/**
+ * Implement hook_module_implements_alter().
+ *
+ * form_alter must be done after gravatar.module
+ */
+function userpickit_gravatar_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'form_alter' && isset($implementations['userpickit_gravatar'])) {
+    $group = $implementations['userpickit_gravatar'];
+    unset($implementations['userpickit_gravatar']);
+    $implementations['userpickit_gravatar'] = $group;
+  }
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+*
+* Kill gravatar.module template override.
+*
+* @see template_preprocess_user_picture().
+*/
+function userpickit_gravatar_theme_registry_alter(&$theme_registry) {
+  if (isset($theme_registry['user_picture']['preprocess functions'])) {
+    $key = array_search('gravatar_preprocess_user_picture', $theme_registry['user_picture']['preprocess functions'], TRUE);
+    unset($theme_registry['user_picture']['preprocess functions'][$key]);
+  }
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ *
+ * Hook into user_profile_form().
+ *
+ * @see hook_form_BASE_FORM_ID_alter()
+ */
+function userpickit_gravatar_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
+  // Hide Gravatar preference.
+  $form['picture']['gravatar']['#access'] = FALSE;
+}
+
+/**
+ * Implements hook_userpickit_info().
+ */
+function userpickit_gravatar_userpickit_info() {
+  $picture_types = array();
+
+  $defaults = array(
+    'default callback' => 'userpickit_gravatar_avatar_default',
+  );
+
+  $picture_types['gravatar'] = array(
+    'title' => t('Gravatar'),
+    'description' => t('Avatars from Gravatar.com'),
+  ) + $defaults;
+
+  $picture_types['gravatar_mysteryman'] = array(
+    'title' => t('Mystery Man'),
+    'description' => t('Human silhouette. Not unique.'),
+  ) + $defaults;
+
+  $picture_types['gravatar_identicon'] = array(
+    'title' => t('Identicon'),
+    'description' => t('Geometric pattern unique to a users email address.'),
+  ) + $defaults;
+
+  $picture_types['gravatar_monster'] = array(
+    'title' => t('Monsterid'),
+    'description' => t('Monster unique to a users email address.'),
+  ) + $defaults;
+
+  $picture_types['gravatar_wavatar'] = array(
+    'title' => t('Wavatar'),
+    'description' => t('Faces unique to a users email address.'),
+  ) + $defaults;
+
+  $picture_types['gravatar_eightbit'] = array(
+    'title' => t('8-Bit'),
+    'description' => t('8-bit arcade face unique to a users email address.'),
+  ) + $defaults;
+
+  return $picture_types;
+}
+
+/**
+ * Implements hook_userpickit_picture().
+ *
+ * Devnote: Gravatar images are always square. If the user pic style is not square, cache locally.
+ *
+ * @param string $picture_type
+ *   Picture type.
+ * @param object $account
+ *   User object.
+ * 
+ * @see _gravatar_get_account_user_picture().
+ */
+function userpickit_gravatar_userpickit_picture($picture_type, $account) {
+  if (empty($account->mail)) {
+    return;
+  }
+
+  $definition = array();
+  $request_options = array();
+
+  if ($default = _userpickit_gravatar_generator($picture_type)) {
+    $request_options['default'] = $default;
+    $request_options['force default'] = TRUE;
+  }
+  else {
+    $definition['message'] = t('Gravatars allow you to !update on multiple websites simultaneously.', array(
+      '!update' => l('update your user picture', 'http://www.gravatar.com/'),
+    ));
+    //$request_options['default'] = 404;
+  }
+
+  return array(
+    'uri' => gravatar_get_gravatar($account->mail, $request_options),
+  ) + $definition;
+}
+
+/**
+ * Default picture callback.
+ *
+ * @see _gravatar_get_account_user_picture().
+ */
+function userpickit_gravatar_avatar_default($picture_type, $account = NULL) {
+  $mail = 'default';
+
+  if ($account && !empty($account->mail)) {
+    $mail = $account->mail;
+    if (!empty($account->hostname)) {
+      $mail = $account->hostname;
+    }
+    elseif (!empty($account->homepage)) {
+      $mail = $account->homepage;
+    }
+    else {
+      $mail = serialize($account);
+    }
+  }
+
+  if ($default = _userpickit_gravatar_generator($picture_type)) {
+    $request_options['default'] = $default;
+    $request_options['force default'] = TRUE;
+  }
+
+  return gravatar_get_gravatar($mail, $request_options);
+}
+
+/**
+ * Get Gravatar picture generator name for picture types. 
+ * @param unknown $picture_type
+ * @return Ambigous <NULL, string>
+ */
+function _userpickit_gravatar_generator($picture_type) {
+  $generators = array(
+    'gravatar_mysteryman' => 'mm',
+    'gravatar_identicon' => 'identicon',
+    'gravatar_monster' => 'monsterid',
+    'gravatar_wavatar' => 'wavatar',
+    'gravatar_eightbit' => 'retro',
+  );
+
+  return array_key_exists($picture_type, $generators) ? $generators[$picture_type] : NULL;
+}

@@ -1,0 +1,4 @@
+name = User Pic Kit
+description = Allow users to choose a picture from multiple providers.
+core = 7.x
+package = User Picture

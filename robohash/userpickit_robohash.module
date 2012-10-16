@@ -1,0 +1,77 @@
+<?php
+
+/**
+ * @file
+ *
+ * Main file for Robohash - User Pic Kit integration.
+ */
+
+/**
+ * Implements hook_userpickit_info().
+ */
+function userpickit_robohash_userpickit_info() {
+  $picture_types = array();
+
+  $defaults = array(
+    'default callback' => 'userpickit_robohash_picture_default',
+  );
+
+  $picture_types['robohash'] = array(
+    'title' => t('Robohash'),
+    'description' => t('Cool robots.'),
+  ) + $defaults;
+
+  $picture_types['robohash_monsters'] = array(
+    'title' => t('Monster'),
+    'description' => t('Random monsters.'),
+  ) + $defaults;
+
+  $picture_types['robohash_heads'] = array(
+    'title' => t('Robot Head'),
+    'description' => t('Disembodied robot heads.'),
+  ) + $defaults;
+
+  return $picture_types;
+}
+
+/**
+ * Implements hook_userpickit_picture().
+ */
+function userpickit_robohash_userpickit_picture($picture_type, $account) {
+  if (!empty($account->mail)) {
+    $hash = md5(drupal_strtolower($account->mail));
+    return array(
+      'uri' => _userpickit_robohash_uri($picture_type, $hash),
+    );
+  }
+}
+
+/**
+ * Default callback.
+ *
+ * @see userpickit_robohash_userpickit_info()
+ */
+function userpickit_robohash_picture_default($picture_type, $account) {
+  $hash = md5($account->uid);
+  return _userpickit_robohash_uri($picture_type, $hash);
+}
+
+/**
+ * Create a Robohash URI for a picture type.
+ */
+function _userpickit_robohash_uri($picture_type, $hash) {
+  $request_options = array();
+  $request_options['query']['bgset'] = 'bg1';
+  
+  if ($picture_type == 'robohash_monsters') {
+    $request_options['query']['set'] = 'set2';
+  }
+  elseif ($picture_type == 'robohash_heads') {
+    $request_options['query']['set'] = 'set3';
+  }
+
+  return url(
+    'http://robohash.org/' . $hash,
+    $request_options
+  );
+}

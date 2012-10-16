@@ -1,0 +1,6 @@
+name = User Pic Kit Gravatars
+description = Provide Gravatar pictures.
+core = 7.x
+package = User Picture
+dependencies[] = gravatar
+dependencies[] = userpickit

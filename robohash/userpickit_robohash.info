@@ -1,0 +1,5 @@
+name = User Pic Kit Robohashes
+description = Provide Robohash pictures.
+core = 7.x
+package = User Picture
+dependencies[] = userpickit
