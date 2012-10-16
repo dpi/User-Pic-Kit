@@ -396,6 +396,19 @@ function userpickit_cache_set($picture_type, $uid, $row) {
 }
 
 /**
+ * Delete and rebuild cache for a users picture type.
+ *
+ * @param string $picture_type
+ *   Picture type.
+ * @param object $account
+ *   User object.
+ */
+function userpickit_cache_rebuild($picture_type, $account) {
+  userpickit_cache_invalidate($picture_type, $account->uid, TRUE);
+  userpickit_user_picture_path($account, $picture_type);
+}
+
+/**
  * Invalidate a user picture cache.
  *
  * Invalidating a picture is done by setting the date to some time in the past.

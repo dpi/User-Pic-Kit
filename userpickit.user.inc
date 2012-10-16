@@ -142,5 +142,6 @@ function userpickit_user_picture_upload_set($uid, $fid) {
     }
   }
 
-  userpickit_cache_invalidate('user', $uid, TRUE);
+  $account = user_load($uid);
+  userpickit_cache_rebuild('user', $account);
 }
